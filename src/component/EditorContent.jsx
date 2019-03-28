@@ -1,6 +1,6 @@
 import React, { Component } from "react";
 import CKEditor from '@ckeditor/ckeditor5-react';
-
+import { Dropdown, DropdownButton, ButtonToolbar }  from 'react-bootstrap';
 import DecoupledEditor from '@ckeditor/ckeditor5-build-decoupled-document';
 
 
@@ -8,13 +8,25 @@ class EditorContent extends Component {
   constructor() {
     super();
     this.state = {
-      models: ['Example text'],
-      numberOfPages: 1,  
+      arrData: ['Example text'],
+      numberOfPages: 1,
+      instances: [
+        {
+          id: 1,
+        }
+      ],
+      data: [
+        {
+          id: 1,
+          text: ''
+        }
+      ]
     }
     this.handleModelChange = this.handleModelChange.bind(this);
     this.handleChange = this.handleChange.bind(this);
     this.convertToImage = this.convertToImage.bind(this);
     this.addNewPage = this.addNewPage.bind(this);
+    this.renderInstance = this.renderInstance.bind(this);
   }
 
   convertToImage() {
@@ -25,7 +37,7 @@ class EditorContent extends Component {
       },
       method: 'POST',
       body: JSON.stringify({
-          text: this.state.models.join('\n'),
+          text: this.state.arrData.join('\n'),
       })
   })
     .then(function(response) {
@@ -38,23 +50,43 @@ class EditorContent extends Component {
       newWindow.document.write(iframe);
       newWindow.document.close();
     })
+  console.log(this.state)
   }
 
-  handleChange(event) {
-    this.setState({ [event.target.id]: event.target.value });
+  handleChange(data, id) {
+    console.log(id)
+    const editor = this.state.data.find(x => x.id === id)
+    editor.text = data;
+
+    this.setState({
+      data: [
+        ...this.state.data.filter(x => x.id !== id),
+        { ...editor }
+      ]
+    })
   }
 
-  handleModelChange(i, model) {
-    let newModel = this.state.models;
-    newModel[i] = model; 
-    this.setState({ models: newModel });
+  handleModelChange(i, data) {
+    let newModel = this.state.arrData;
+    newModel[i] = data; 
   }
 
   addNewPage() {
     this.setState({ 
-      numberOfPages: ++this.state.numberOfPages,
-      models: [...this.state.models, "Example Text"]
-    });
+      instances: [
+        ...this.state.instances,
+        {
+          id: this.state.instances.length + 1,
+        }
+      ],
+      data: [
+        ...this.state.data,
+        {
+          id: this.state.data.length + 1,
+          text: ''
+        }
+      ]
+  })
   }
 
   renderPages() {
@@ -65,11 +97,6 @@ class EditorContent extends Component {
       pages.push(<CKEditor
         key={i}
         onInit={ editor => {
-            // Insert the toolbar before the editable area.
-            const editableContainer = document.querySelector( '.document-editor__editable' );
-              editableContainer.appendChild(editor.ui.getEditableElement());
-            const toolbarContainer = document.querySelector( '.document-editor__toolbar' );
-              toolbarContainer.appendChild( editor.ui.view.toolbar.element );
               window.editor = editor;
               editor.ui.getEditableElement().parentElement.insertBefore(
                 editor.ui.view.toolbar.element,
@@ -77,11 +104,10 @@ class EditorContent extends Component {
             );
         } } 
         config={this.state.configs}
-        model={this.state.models[i]}
+       // data={this.state.arrData[i]}
         onModelChange={this.handleModelChange.bind(this, i)}
-        onChange={ ( event, editor ) => console.log( { event, editor } ) }
+        onChange={ ( event, editor) => this.handleChange(editor.getData(), i)}
         editor={ DecoupledEditor }
-        // data="<p>Hello from CKEditor 5's DecoupledEditor!</p>"
         >
       </CKEditor>
       )
@@ -90,24 +116,67 @@ class EditorContent extends Component {
     return pages;
   }
 
+  renderInstance(instance) {
+    return (
+      <CKEditor
+        key={instance.id}
+        onInit={ editor => {
+              window.editor = editor;
+              editor.ui.getEditableElement().parentElement.insertBefore(
+                editor.ui.view.toolbar.element,
+                editor.ui.getEditableElement()
+            );
+        } } 
+        config={this.state.configs}
+        onChange={ ( event, editor) => this.handleChange(editor.getData(), instance.id)}
+        editor={ DecoupledEditor }
+        >
+      </CKEditor>
+    )
+  }
+
   render() {
     return (
       <div>
-      <div>
+        <div>
           <h2>CKEditor 5 using a custom build - DecoupledEditor</h2>
           <button onClick={this.convertToImage}>Convert</button>
-          <div id="editor">
-            { this.renderPages() }
+          <div className="document-editor__toolbar"></div>
+            <div className="document-editor__editable-container">
+              <div className="document-editor__editable">
+                <p>The initial editor data.</p>
+                <div>
+                  <ButtonToolbar className="dropdown-item">
+                    {['Invoice value', 'Transaction value', 'Dispute value', 'Customer value', 'Subscription Value'].map(
+                      variant => (
+                        <DropdownButton
+                          title={variant}
+                          variant={variant.toLowerCase()}
+                          id={`dropdown-variants-${variant}`}
+                          key={variant}
+                        >
+                          <Dropdown.Item eventKey="1">Action</Dropdown.Item>
+                          <Dropdown.Item eventKey="2">Another action</Dropdown.Item>
+                          <Dropdown.Item eventKey="3" active>
+                            Active Item
+                          </Dropdown.Item>
+                          <Dropdown.Divider />
+                          <Dropdown.Item eventKey="4">Separated link</Dropdown.Item>
+                        </DropdownButton>
+                      ),
+                    )}
+                  </ButtonToolbar>
+                  {this.state.instances.map(instance => this.renderInstance(instance))}
+                </div>
+              </div>
+            </div>
           </div>
-      </div>
-      <div>
-        <button onClick={this.addNewPage}>Add Page</button>
-      </div>
+        <div>
+          <button onClick={this.addNewPage}>Add Page</button>
+        </div>
       </div>
     );
 }
 }
 
 export default EditorContent;
-
-<script src="index.js"></script>

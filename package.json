@@ -42,10 +42,12 @@
     "bluebird": "^3.5.3",
     "body-parser": "^1.18.3",
     "express": "^4.16.4",
+    "file-loader": "^3.0.1",
     "lodash": "^4.17.11",
     "postcss-loader": "^3.0.0",
     "raw-loader": "^2.0.0",
     "react": "^16.8.4",
+    "react-bootstrap": "^1.0.0-beta.6",
     "react-dom": "^16.8.4"
   }
 }
