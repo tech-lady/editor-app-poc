@@ -43,6 +43,8 @@
   /* Set the dimensions of the "page". */
   width: 15.8cm;
   min-height: 21cm;
+  max-height: 21cm;
+  overflow-y: visible;
 
   /* Keep the "page" off the boundaries of the container. */
   padding: 1cm 2cm 2cm;
@@ -56,6 +58,11 @@
 
   /* Center the "page". */
   margin: 0 auto;
+}
+
+.ck.ck-editor__editable_inline {
+  overflow: unset;
+  min-height: 21cm;
 }
 
 /* Set the default font for the "page" of the content. */

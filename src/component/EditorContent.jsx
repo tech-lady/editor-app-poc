@@ -9,6 +9,14 @@ class EditorContent extends Component {
     super();
     this.state = {
       arrData: ['Example text'],
+      selected: "",
+      itemsData: {
+        "Invoice Value": ["a val of a", "a val of b"],
+        "Transaction Value": ["a val of c", "a val of d"],
+        "Dispute Value": ["a val of e", "a val of f"],
+        "Customer Value": ["a val of g", "a val of h"],
+        "Subscription Value": ["a val of i", "a val of j"]
+      },
       numberOfPages: 1,
       instances: [
         {
@@ -27,6 +35,7 @@ class EditorContent extends Component {
     this.convertToImage = this.convertToImage.bind(this);
     this.addNewPage = this.addNewPage.bind(this);
     this.renderInstance = this.renderInstance.bind(this);
+    this.handleSelect = this.handleSelect.bind(this);
   }
 
   convertToImage() {
@@ -37,7 +46,7 @@ class EditorContent extends Component {
       },
       method: 'POST',
       body: JSON.stringify({
-          text: this.state.arrData.join('\n'),
+          text: this.state.data.map(val => val.text).join('\n'),
       })
   })
     .then(function(response) {
@@ -89,37 +98,21 @@ class EditorContent extends Component {
   })
   }
 
-  renderPages() {
-    let i = 0;
-    let pages = [];
-
-    for(; i < this.state.numberOfPages; i++) {
-      pages.push(<CKEditor
-        key={i}
-        onInit={ editor => {
-              window.editor = editor;
-              editor.ui.getEditableElement().parentElement.insertBefore(
-                editor.ui.view.toolbar.element,
-                editor.ui.getEditableElement()
-            );
-        } } 
-        config={this.state.configs}
-       // data={this.state.arrData[i]}
-        onModelChange={this.handleModelChange.bind(this, i)}
-        onChange={ ( event, editor) => this.handleChange(editor.getData(), i)}
-        editor={ DecoupledEditor }
-        >
-      </CKEditor>
-      )
-    }
-    
-    return pages;
+  handleSelect(e, variant){
+    this.setState({
+      selected: variant,
+    })
+    console.log(e, variant);
   }
 
   renderInstance(instance) {
     return (
       <CKEditor
         key={instance.id}
+        toolbarGroups={[
+          { name: 'mode' },
+          { name: 'basicstyles' }
+        ]}
         onInit={ editor => {
               window.editor = editor;
               editor.ui.getEditableElement().parentElement.insertBefore(
@@ -130,6 +123,7 @@ class EditorContent extends Component {
         config={this.state.configs}
         onChange={ ( event, editor) => this.handleChange(editor.getData(), instance.id)}
         editor={ DecoupledEditor }
+        // data= {this.state.selected}
         >
       </CKEditor>
     )
@@ -147,24 +141,20 @@ class EditorContent extends Component {
                 <p>The initial editor data.</p>
                 <div>
                   <ButtonToolbar className="dropdown-item">
-                    {['Invoice value', 'Transaction value', 'Dispute value', 'Customer value', 'Subscription Value'].map(
-                      variant => (
+                  {Object.keys(this.state.itemsData).map(variant =>
+                    (
                         <DropdownButton
                           title={variant}
                           variant={variant.toLowerCase()}
                           id={`dropdown-variants-${variant}`}
                           key={variant}
+                          onSelect={(e) => this.handleSelect(e, variant)}
                         >
-                          <Dropdown.Item eventKey="1">Action</Dropdown.Item>
-                          <Dropdown.Item eventKey="2">Another action</Dropdown.Item>
-                          <Dropdown.Item eventKey="3" active>
-                            Active Item
-                          </Dropdown.Item>
-                          <Dropdown.Divider />
-                          <Dropdown.Item eventKey="4">Separated link</Dropdown.Item>
+                          {this.state.itemsData[variant].map(item => (
+                            <Dropdown.Item eventKey={item} key={item}>{item}</Dropdown.Item>
+                          ))}
                         </DropdownButton>
-                      ),
-                    )}
+                  ))}
                   </ButtonToolbar>
                   {this.state.instances.map(instance => this.renderInstance(instance))}
                 </div>
